@@ -7,7 +7,7 @@ const router = express.Router();
 // router.patch('/:id', AdminController.updateAdmin);
 // router.delete('/:id', AdminController.deleteAdmin);
 router.post('/create-admin', AdminController.createAdmin);
-//router.post('/login', AdminController.createAdmin);
+//router.post('/login', AdminController.loginAdmin);
 //router.get('/', AdminController.getAllAdmin);
 
 export const AdminRoutes = router;
