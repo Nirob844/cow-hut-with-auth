@@ -33,7 +33,7 @@ app.use((req: Request, res: Response) => {
 
 //Testing
 app.get('/', async (req: Request, res: Response) => {
-  // res.send('Working Successfully');
+  res.send('Working Successfully');
   throw new Error('testing');
 });
 
