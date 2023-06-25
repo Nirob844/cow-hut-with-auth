@@ -18,7 +18,6 @@ const auth =
       let verifiedUser = null;
 
       verifiedUser = jwtHelpers.verifyToken(token, config.jwt.secret as Secret);
-
       req.user = verifiedUser; // role , userid
 
       // role guard
