@@ -1,9 +1,14 @@
 import { Request, RequestHandler, Response } from 'express';
 import httpStatus from 'http-status';
 import config from '../../../config';
+import ApiError from '../../../errors/ApiError';
 import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
-import { IAdmin, ILoginAdminResponse } from './admin.interface';
+import {
+  IAdmin,
+  ILoginAdminResponse,
+  IRefreshTokenResponse,
+} from './admin.interface';
 import { AdminService } from './admin.service';
 
 const createAdmin: RequestHandler = catchAsync(
@@ -41,7 +46,32 @@ const loginAdmin = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const refreshToken = catchAsync(async (req: Request, res: Response) => {
+  const { refreshToken } = req.cookies;
+
+  if (!refreshToken) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'refresh token required');
+  }
+  const result = await AdminService.refreshToken(refreshToken);
+
+  // set refresh token into cookie
+  const cookieOptions = {
+    secure: config.env === 'production',
+    httpOnly: true,
+  };
+
+  res.cookie('refreshToken', refreshToken, cookieOptions);
+
+  sendResponse<IRefreshTokenResponse>(res, {
+    statusCode: 200,
+    success: true,
+    message: 'User login successfully !',
+    data: result,
+  });
+});
+
 export const AdminController = {
   createAdmin,
   loginAdmin,
+  refreshToken,
 };
