@@ -55,6 +55,15 @@ const userSchema = new Schema<IUser, UserModel>(
   }
 );
 
+//is user exist
+userSchema.statics.isUserExist = async function (
+  phoneNumber: string
+): Promise<Pick<IUser, 'id' | 'password' | 'role' | 'phoneNumber'> | null> {
+  return await User.findOne(
+    { phoneNumber },
+    { id: 1, password: 1, role: 1, phoneNumber: 1 }
+  );
+};
 // is password match
 userSchema.statics.isPasswordMatched = async function (
   givenPassword: string,
@@ -63,15 +72,16 @@ userSchema.statics.isPasswordMatched = async function (
   return await bcrypt.compare(givenPassword, savedPassword);
 };
 
-// hash Admin password
+// hash user password
 userSchema.pre('save', async function (next) {
-  this.password = await bcrypt.hash(
-    this.password,
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
+  const user = this;
+  user.password = await bcrypt.hash(
+    user.password,
     Number(config.bcrypt_salt_rounds)
   );
   next();
 });
-
 export const User = model<IUser, UserModel>('User', userSchema);
 
 export type IUserFilters = {
