@@ -1,4 +1,6 @@
+import bcrypt from 'bcrypt';
 import { Schema, model } from 'mongoose';
+import config from '../../../config';
 import { IUser, UserModel } from './user.interface';
 
 const userSchema = new Schema<IUser, UserModel>(
@@ -13,7 +15,11 @@ const userSchema = new Schema<IUser, UserModel>(
       enum: ['seller', 'buyer'],
       required: true,
     },
-    password: { type: String, required: true },
+    password: {
+      type: String,
+      required: true,
+      select: 0,
+    },
     name: {
       firstName: {
         type: String,
@@ -48,6 +54,23 @@ const userSchema = new Schema<IUser, UserModel>(
     },
   }
 );
+
+// is password match
+userSchema.statics.isPasswordMatched = async function (
+  givenPassword: string,
+  savedPassword: string
+): Promise<boolean> {
+  return await bcrypt.compare(givenPassword, savedPassword);
+};
+
+// hash Admin password
+userSchema.pre('save', async function (next) {
+  this.password = await bcrypt.hash(
+    this.password,
+    Number(config.bcrypt_salt_rounds)
+  );
+  next();
+});
 
 export const User = model<IUser, UserModel>('User', userSchema);
 

@@ -1,8 +1,9 @@
 import { Request, RequestHandler, Response } from 'express';
 import httpStatus from 'http-status';
+import config from '../../../config';
 import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
-import { IAdmin } from './admin.interface';
+import { IAdmin, ILoginAdminResponse } from './admin.interface';
 import { AdminService } from './admin.service';
 
 const createAdmin: RequestHandler = catchAsync(
@@ -19,28 +20,28 @@ const createAdmin: RequestHandler = catchAsync(
   }
 );
 
-// const loginAdmin = catchAsync(async (req: Request, res: Response) => {
-//   const { ...loginData } = req.body;
-//   const result = await AuthService.loginAdmin(loginData);
+const loginAdmin = catchAsync(async (req: Request, res: Response) => {
+  const { ...loginData } = req.body;
+  const result = await AdminService.loginAdmin(loginData);
 
-//   const { refreshToken, ...others } = result;
-//   // set refresh token into cookie
-//   const cookieOptions = {
-//     secure: config.env === 'production',
-//     httpOnly: true,
-//   };
+  const { refreshToken, ...others } = result;
+  // set refresh token into cookie
+  const cookieOptions = {
+    secure: config.env === 'production',
+    httpOnly: true,
+  };
 
-//   res.cookie('refreshToken', refreshToken, cookieOptions);
+  res.cookie('refreshToken', refreshToken, cookieOptions);
 
-//   sendResponse<ILoginAdminResponse>(res, {
-//     statusCode: 200,
-//     success: true,
-//     message: 'User login successfully !',
-//     data: others,
-//   });
-// });
+  sendResponse<ILoginAdminResponse>(res, {
+    statusCode: 200,
+    success: true,
+    message: 'User login successfully !',
+    data: others,
+  });
+});
 
 export const AdminController = {
   createAdmin,
-  //  loginAdmin,
+  loginAdmin,
 };

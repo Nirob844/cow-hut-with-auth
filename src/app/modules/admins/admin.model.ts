@@ -18,6 +18,7 @@ const adminSchema = new Schema<IAdmin, AdminModel>(
     password: {
       type: String,
       required: true,
+      select: 0,
     },
     name: {
       firstName: {
@@ -46,14 +47,11 @@ const adminSchema = new Schema<IAdmin, AdminModel>(
 );
 //is admin exist
 adminSchema.statics.isAdminExist = async function (
-  id: string
-): Promise<Pick<
-  IAdmin,
-  'id' | 'password' | 'role' | 'needsPasswordChange'
-> | null> {
+  phoneNumber: string
+): Promise<Pick<IAdmin, 'id' | 'password' | 'role' | 'phoneNumber'> | null> {
   return await Admin.findOne(
-    { id },
-    { id: 1, password: 1, role: 1, needsPasswordChange: 1 }
+    { phoneNumber },
+    { id: 1, password: 1, role: 1, phoneNumber: 1 }
   );
 };
 // is password match
