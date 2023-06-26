@@ -39,16 +39,16 @@ const loginUser = async (payload: ILoginUser): Promise<ILoginUserResponse> => {
   }
 
   //create access token & refresh token
-  const { phoneNumber: ph, role } = isUserExist;
+  const { id, role } = isUserExist;
 
   const accessToken = jwtHelpers.createToken(
-    { ph, role },
+    { id, role },
     config.jwt.secret as Secret,
     config.jwt.expires_in as string
   );
 
   const refreshToken = jwtHelpers.createToken(
-    { ph, role },
+    { id, role },
     config.jwt.refresh_secret as Secret,
     config.jwt.refresh_expires_in as string
   );
@@ -71,18 +71,20 @@ const refreshToken = async (token: string): Promise<IRefreshTokenResponse> => {
     throw new ApiError(httpStatus.FORBIDDEN, 'Invalid Refresh Token');
   }
 
-  const { ph } = verifiedToken;
+  const { id } = verifiedToken;
+  console.log(verifiedToken);
 
   // checking deleted user's refresh token
-  const isUserExist = await User.isUserExist(ph);
-  if (!isUserExist) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User does not exist');
+  const user = await User.findById(id);
+
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'user does not exist');
   }
   //generate new token
   const newAccessToken = jwtHelpers.createToken(
     {
-      phoneNumber: isUserExist.phoneNumber,
-      role: isUserExist.role,
+      id: user.id,
+      role: user.role,
     },
     config.jwt.secret as Secret,
     config.jwt.expires_in as string

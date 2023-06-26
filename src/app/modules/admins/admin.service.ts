@@ -39,16 +39,16 @@ const loginAdmin = async (
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Password is incorrect');
   }
   //create access token & refresh token
-  const { phoneNumber: ph, role } = isAdminExist;
+  const { id, role } = isAdminExist;
 
   const accessToken = jwtHelpers.createToken(
-    { ph, role },
+    { id, role },
     config.jwt.secret as Secret,
     config.jwt.expires_in as string
   );
 
   const refreshToken = jwtHelpers.createToken(
-    { ph, role },
+    { id, role },
     config.jwt.refresh_secret as Secret,
     config.jwt.refresh_expires_in as string
   );
@@ -71,18 +71,19 @@ const refreshToken = async (token: string): Promise<IRefreshTokenResponse> => {
     throw new ApiError(httpStatus.FORBIDDEN, 'Invalid Refresh Token');
   }
 
-  const { ph } = verifiedToken;
+  const { id } = verifiedToken;
 
   // checking deleted user's refresh token
-  const isAdminExist = await Admin.isAdminExist(ph);
-  if (!isAdminExist) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'admin does not exist');
+  const admin = await Admin.findById(id);
+
+  if (!admin) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Admin does not exist');
   }
   //generate new token
   const newAccessToken = jwtHelpers.createToken(
     {
-      phoneNumber: isAdminExist.phoneNumber,
-      role: isAdminExist.role,
+      id: admin.id,
+      role: admin.role,
     },
     config.jwt.secret as Secret,
     config.jwt.expires_in as string

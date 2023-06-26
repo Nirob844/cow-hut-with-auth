@@ -21,7 +21,6 @@ export const createOrder = async (orderData: IOrder): Promise<IOrder> => {
   if (!cow) {
     throw new Error('Cow not found');
   }
-
   // Check if the cow is already sold
   if (cow.label === 'sold out') {
     throw new Error('Cow is already sold');
