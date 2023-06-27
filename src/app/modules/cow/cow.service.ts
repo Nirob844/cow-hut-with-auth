@@ -1,3 +1,4 @@
+import httpStatus from 'http-status';
 import { SortOrder } from 'mongoose';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
@@ -94,8 +95,20 @@ const getSingleCow = async (id: string): Promise<ICow | null> => {
 
 const updateCow = async (
   id: string,
+  seller: string,
   payload: Partial<ICow>
 ): Promise<ICow | null> => {
+  const cow = await Cow.findById(id);
+
+  if (!cow) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Cow not found');
+  }
+  // Check if the authenticated user is the seller of the cow
+
+  if (cow.seller.toString() !== seller) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Unauthorized access');
+  }
+
   const result = await Cow.findOneAndUpdate({ _id: id }, payload, {
     new: true,
   }).populate('seller');

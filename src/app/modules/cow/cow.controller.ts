@@ -1,5 +1,6 @@
 import { Request, RequestHandler, Response } from 'express';
 import httpStatus from 'http-status';
+import { JwtPayload } from 'jsonwebtoken';
 import { paginationFields } from '../../../constants/pagination';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
@@ -60,8 +61,9 @@ const getSingleCow = catchAsync(async (req: Request, res: Response) => {
 const updateCow = catchAsync(async (req: Request, res: Response) => {
   const id = req.params.id;
   const updatedData = req.body;
+  const { id: seller } = req.user as JwtPayload;
 
-  const result = await CowService.updateCow(id, updatedData);
+  const result = await CowService.updateCow(id, seller, updatedData);
 
   sendResponse<ICow>(res, {
     statusCode: httpStatus.OK,
