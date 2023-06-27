@@ -90,6 +90,9 @@ const getAllCows = async (
 
 const getSingleCow = async (id: string): Promise<ICow | null> => {
   const result = await Cow.findById(id).populate('seller');
+  if (!result) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Cow not found');
+  }
   return result;
 };
 
@@ -99,12 +102,10 @@ const updateCow = async (
   payload: Partial<ICow>
 ): Promise<ICow | null> => {
   const cow = await Cow.findById(id);
-
   if (!cow) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Cow not found');
   }
   // Check if the authenticated user is the seller of the cow
-
   if (cow.seller.toString() !== seller) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Unauthorized access');
   }
@@ -115,7 +116,15 @@ const updateCow = async (
   return result;
 };
 
-const deleteCow = async (id: string): Promise<ICow | null> => {
+const deleteCow = async (id: string, seller: string): Promise<ICow | null> => {
+  const cow = await Cow.findById(id);
+  if (!cow) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Cow not found');
+  }
+  // Check if the authenticated user is the seller of the cow
+  if (cow.seller.toString() !== seller) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Unauthorized access');
+  }
   const result = await Cow.findByIdAndDelete(id);
   return result;
 };

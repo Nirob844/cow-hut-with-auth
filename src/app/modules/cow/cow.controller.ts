@@ -75,8 +75,8 @@ const updateCow = catchAsync(async (req: Request, res: Response) => {
 
 const deleteCow = catchAsync(async (req: Request, res: Response) => {
   const id = req.params.id;
-
-  const result = await CowService.deleteCow(id);
+  const { id: seller } = req.user as JwtPayload;
+  const result = await CowService.deleteCow(id, seller);
 
   sendResponse<ICow>(res, {
     statusCode: httpStatus.OK,
