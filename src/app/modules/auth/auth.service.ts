@@ -40,6 +40,7 @@ const loginUser = async (payload: ILoginUser): Promise<ILoginUserResponse> => {
 
   //create access token & refresh token
   const { id, role } = isUserExist;
+  console.log(isUserExist);
 
   const accessToken = jwtHelpers.createToken(
     { id, role },
@@ -72,8 +73,6 @@ const refreshToken = async (token: string): Promise<IRefreshTokenResponse> => {
   }
 
   const { id } = verifiedToken;
-  console.log(verifiedToken);
-
   // checking deleted user's refresh token
   const user = await User.findById(id);
 

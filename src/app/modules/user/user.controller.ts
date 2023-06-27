@@ -1,10 +1,7 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status';
-import { Secret } from 'jsonwebtoken';
-import config from '../../../config';
+import { JwtPayload } from 'jsonwebtoken';
 import { paginationFields } from '../../../constants/pagination';
-import ApiError from '../../../errors/ApiError';
-import { jwtHelpers } from '../../../helpers/jwtHelpers';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
@@ -42,20 +39,7 @@ const getSingleUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 const getUserProfile = catchAsync(async (req: Request, res: Response) => {
-  // Get the access token from the request headers
-  const token = req.headers.authorization as string;
-
-  //verify token
-  let verifiedToken = null;
-  try {
-    verifiedToken = jwtHelpers.verifyToken(token, config.jwt.secret as Secret);
-  } catch (err) {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Invalid  Token');
-  }
-
-  const { id } = verifiedToken;
-  console.log('id aisot tos', id);
-
+  const { id } = req.user as JwtPayload; // Perform a type assertion to JwtPayload
   const result = await UserService.getUserProfile(id);
 
   sendResponse<IUser>(res, {

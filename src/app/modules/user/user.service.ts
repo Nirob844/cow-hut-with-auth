@@ -75,6 +75,13 @@ const getSingleUser = async (id: string): Promise<IUser | null> => {
   const result = await User.findById(id);
   return result;
 };
+const getUserProfile = async (id: string): Promise<IUser | null> => {
+  const result = await User.findById({ _id: id });
+  if (!result) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  return result;
+};
 
 const updateUser = async (
   id: string,
@@ -113,6 +120,7 @@ export const UserService = {
   createUser,
   getAllUsers,
   getSingleUser,
+  getUserProfile,
   updateUser,
   deleteUser,
 };
