@@ -73,15 +73,34 @@ userSchema.statics.isPasswordMatched = async function (
 };
 
 // hash user password
+// userSchema.pre('save', async function (next) {
+//   // eslint-disable-next-line @typescript-eslint/no-this-alias
+//   const user = this;
+//   user.password = await bcrypt.hash(
+//     user.password,
+//     Number(config.bcrypt_salt_rounds)
+//   );
+//   next();
+// });
+
 userSchema.pre('save', async function (next) {
   // eslint-disable-next-line @typescript-eslint/no-this-alias
   const user = this;
-  user.password = await bcrypt.hash(
-    user.password,
-    Number(config.bcrypt_salt_rounds)
-  );
-  next();
+
+  if (user.isModified('password')) {
+    try {
+      const saltRounds = Number(config.bcrypt_salt_rounds);
+      const hashedPassword = await bcrypt.hash(user.password, saltRounds);
+      user.password = hashedPassword;
+      next();
+    } catch (error) {
+      next();
+    }
+  } else {
+    next();
+  }
 });
+
 export const User = model<IUser, UserModel>('User', userSchema);
 
 export type IUserFilters = {

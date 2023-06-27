@@ -1,5 +1,6 @@
 import { Request, RequestHandler, Response } from 'express';
 import httpStatus from 'http-status';
+import { JwtPayload } from 'jsonwebtoken';
 import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
 import { IOrder } from './order.interface';
@@ -21,7 +22,8 @@ const createOrder: RequestHandler = catchAsync(
 );
 
 const getAllOrders = catchAsync(async (req: Request, res: Response) => {
-  const result = await OrderService.getAllOrders();
+  const { id: userId, role } = req.user as JwtPayload;
+  const result = await OrderService.getAllOrders(userId, role);
 
   sendResponse<IOrder[]>(res, {
     statusCode: httpStatus.OK,

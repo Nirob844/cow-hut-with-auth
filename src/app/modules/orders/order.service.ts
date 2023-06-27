@@ -1,16 +1,9 @@
+import httpStatus from 'http-status';
+import ApiError from '../../../errors/ApiError';
 import { Cow } from '../cow/cow.model';
 import { User } from '../user/user.model';
 import { IOrder } from './order.interface';
 import { Order } from './order.model';
-
-// const createOrder = async (cow: IOrder): Promise<IOrder | null> => {
-//   const createdCow = await Order.create(cow);
-
-//   if (!createdCow) {
-//     throw new ApiError(400, 'failed to create Cow !');
-//   }
-//   return createdCow;
-// };
 
 export const createOrder = async (orderData: IOrder): Promise<IOrder> => {
   const { cow: cowId, buyer: buyerId } = orderData;
@@ -32,7 +25,9 @@ export const createOrder = async (orderData: IOrder): Promise<IOrder> => {
   if (!buyer) {
     throw new Error('Buyer not found');
   }
-
+  if (buyer.role !== 'buyer') {
+    throw new Error('Forbidden: Access denied');
+  }
   // Simulate the payment process
   const totalPrice = cow.price;
   const buyerBalance = buyer.budget;
@@ -80,8 +75,41 @@ export const createOrder = async (orderData: IOrder): Promise<IOrder> => {
   }
 };
 
-const getAllOrders = async (): Promise<IOrder[] | null> => {
-  const result = await Order.find().populate('cow').populate('buyer');
+const getAllOrders = async (
+  userId: string,
+  role: string
+): Promise<IOrder[] | null> => {
+  let result: IOrder[] | null = null; // Declare the result variable
+
+  try {
+    // Check the role and handle access based on the role
+    if (role === 'admin') {
+      // Admin can access all orders
+      result = await Order.find().populate('cow').populate('buyer').exec();
+    } else if (role === 'buyer') {
+      // Buyer can access their own orders
+      result = await Order.find({ buyer: userId })
+        .populate('cow')
+        .populate('buyer')
+        .exec();
+    } else if (role === 'seller') {
+      // Seller can access their own orders
+      result = await Order.find({ seller: userId })
+        .populate('cow')
+        .populate('buyer')
+        .exec();
+    } else {
+      // Invalid role
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'You are not authorized');
+    }
+  } catch (error) {
+    // Handle errors
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Internal Server Error'
+    );
+  }
+
   return result;
 };
 
