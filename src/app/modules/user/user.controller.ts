@@ -50,6 +50,20 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const updateUserProfile = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.user as JwtPayload; // Perform a type assertion to JwtPayload
+
+  const updatedData = req.body;
+
+  const result = await UserService.updateUserProfile(id, updatedData);
+
+  sendResponse<IUser>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'User updated successfully !',
+    data: result,
+  });
+});
 const updateUser = catchAsync(async (req: Request, res: Response) => {
   const id = req.params.id;
   const updatedData = req.body;
@@ -81,6 +95,7 @@ export const UsersController = {
   getAllUsers,
   getSingleUser,
   getUserProfile,
+  updateUserProfile,
   updateUser,
   deleteUser,
 };

@@ -40,7 +40,6 @@ const loginAdmin = async (
   }
   //create access token & refresh token
   const { id, role } = isAdminExist;
-  console.log(isAdminExist);
 
   const accessToken = jwtHelpers.createToken(
     { id, role },

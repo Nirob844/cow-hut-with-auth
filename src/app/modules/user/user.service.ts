@@ -75,11 +75,40 @@ const getSingleUser = async (id: string): Promise<IUser | null> => {
   const result = await User.findById(id);
   return result;
 };
+
 const getUserProfile = async (id: string): Promise<IUser | null> => {
   const result = await User.findById({ _id: id });
   if (!result) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
+  return result;
+};
+
+const updateUserProfile = async (
+  id: string,
+  payload: Partial<IUser>
+): Promise<IUser | null> => {
+  const isExist = await User.findOne({ _id: id });
+
+  if (!isExist) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'user not found !');
+  }
+
+  const { name, ...userData } = payload;
+
+  const updatedUserData: Partial<IUser> = { ...userData };
+
+  // dynamically handling
+  if (name && Object.keys(name).length > 0) {
+    Object.keys(name).forEach(key => {
+      const nameKey = `name.${key}` as keyof Partial<IUser>; // `name.fisrtName`
+      (updatedUserData as any)[nameKey] = name[key as keyof typeof name];
+    });
+  }
+  const objectId = new Types.ObjectId(id); // Convert string to ObjectId
+  const result = await User.findOneAndUpdate(objectId, updatedUserData, {
+    new: true,
+  });
   return result;
 };
 
@@ -121,6 +150,7 @@ export const UserService = {
   getAllUsers,
   getSingleUser,
   getUserProfile,
+  updateUserProfile,
   updateUser,
   deleteUser,
 };
