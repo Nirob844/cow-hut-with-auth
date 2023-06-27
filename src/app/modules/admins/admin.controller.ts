@@ -1,5 +1,6 @@
 import { Request, RequestHandler, Response } from 'express';
 import httpStatus from 'http-status';
+import { JwtPayload } from 'jsonwebtoken';
 import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
 import catchAsync from '../../../shared/catchAsync';
@@ -70,8 +71,37 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAdminProfile = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.user as JwtPayload; // Perform a type assertion to JwtPayload
+  const result = await AdminService.getAdminProfile(id);
+
+  sendResponse<IAdmin>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'User retrieved successfully !',
+    data: result,
+  });
+});
+
+const updateAdminProfile = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.user as JwtPayload; // Perform a type assertion to JwtPayload
+
+  const updatedData = req.body;
+
+  const result = await AdminService.updateAdminProfile(id, updatedData);
+
+  sendResponse<IAdmin>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'User updated successfully !',
+    data: result,
+  });
+});
+
 export const AdminController = {
   createAdmin,
   loginAdmin,
   refreshToken,
+  getAdminProfile,
+  updateAdminProfile,
 };

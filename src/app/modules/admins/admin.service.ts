@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import { Secret } from 'jsonwebtoken';
+import { Types } from 'mongoose';
 import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
 import { jwtHelpers } from '../../../helpers/jwtHelpers';
@@ -94,8 +96,46 @@ const refreshToken = async (token: string): Promise<IRefreshTokenResponse> => {
   };
 };
 
+const getAdminProfile = async (id: string): Promise<IAdmin | null> => {
+  const result = await Admin.findById({ _id: id });
+  if (!result) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  return result;
+};
+
+const updateAdminProfile = async (
+  id: string,
+  payload: Partial<IAdmin>
+): Promise<IAdmin | null> => {
+  const isExist = await Admin.findOne({ _id: id });
+
+  if (!isExist) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'admin not found !');
+  }
+
+  const { name, ...userData } = payload;
+
+  const updatedUserData: Partial<IAdmin> = { ...userData };
+
+  // dynamically handling
+  if (name && Object.keys(name).length > 0) {
+    Object.keys(name).forEach(key => {
+      const nameKey = `name.${key}` as keyof Partial<IAdmin>; // `name.fisrtName`
+      (updatedUserData as any)[nameKey] = name[key as keyof typeof name];
+    });
+  }
+  const objectId = new Types.ObjectId(id); // Convert string to ObjectId
+  const result = await Admin.findOneAndUpdate(objectId, updatedUserData, {
+    new: true,
+  });
+  return result;
+};
+
 export const AdminService = {
   createAdmin,
   loginAdmin,
   refreshToken,
+  getAdminProfile,
+  updateAdminProfile,
 };
