@@ -1,5 +1,5 @@
 {
-  "name": "Digital-Cow-Hut-Backend",
+  "name": "Digital-Cow-Hut-with-auth",
   "version": "1.0.0",
   "description": "",
   "main": "src/server.ts",
