@@ -150,7 +150,82 @@ const getAllOrders = async (
   return result;
 };
 
+const getSingleOrder = async (
+  orderId: string,
+  userId: string,
+  role: string
+): Promise<IOrder | null> => {
+  try {
+    let result: IOrder | null = null; // Declare the result variable
+    // Check the role and handle access based on the role
+    if (role === 'admin') {
+      // Admin can access all orders
+      result = await Order.findById(orderId)
+        .populate('cow')
+        .populate({
+          path: 'buyer',
+          model: 'User',
+        })
+        .populate({
+          path: 'cow',
+          populate: { path: 'seller', model: 'User' },
+        })
+        .exec();
+    } else if (role === 'buyer') {
+      // Buyer can access their own orders
+      result = await Order.findOne({ _id: orderId, buyer: userId })
+        .populate('cow')
+        .populate({
+          path: 'buyer',
+          model: 'User',
+        })
+        .populate({
+          path: 'cow',
+          populate: { path: 'seller', model: 'User' },
+        })
+        .exec();
+    } else if (role === 'seller') {
+      // Seller can access orders related to their cows
+      const seller = await User.findById(userId);
+
+      if (!seller) {
+        throw new ApiError(httpStatus.NOT_FOUND, 'Seller not found');
+      }
+
+      const sellerCows = await Cow.find({ seller: userId });
+
+      result = await Order.findOne({ _id: orderId, cow: { $in: sellerCows } })
+        .populate('cow')
+        .populate({
+          path: 'buyer',
+          model: 'User',
+        })
+        .populate({
+          path: 'cow',
+          populate: { path: 'seller', model: 'User' },
+        })
+        .exec();
+    } else {
+      // Invalid role
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'You are not authorized');
+    }
+
+    if (!result) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Order not found');
+    }
+
+    return result;
+  } catch (error) {
+    // Handle errors
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Internal Server Error'
+    );
+  }
+};
+
 export const OrderService = {
   createOrder,
   getAllOrders,
+  getSingleOrder,
 };

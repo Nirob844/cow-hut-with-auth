@@ -32,8 +32,22 @@ const getAllOrders = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const getSingleOrder = catchAsync(async (req: Request, res: Response) => {
+  const { id: orderId } = req.params;
+  const { id: userId, role } = req.user as JwtPayload;
+
+  const result = await OrderService.getSingleOrder(orderId, userId, role);
+
+  sendResponse<IOrder>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Cow retrieved successfully !',
+    data: result,
+  });
+});
 
 export const OrderController = {
   createOrder,
   getAllOrders,
+  getSingleOrder,
 };
