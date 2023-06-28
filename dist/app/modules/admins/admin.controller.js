@@ -23,25 +23,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuthController = void 0;
+exports.AdminController = void 0;
 const http_status_1 = __importDefault(require("http-status"));
 const config_1 = __importDefault(require("../../../config"));
+const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const catchAsync_1 = __importDefault(require("../../../shared/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../shared/sendResponse"));
-const auth_service_1 = require("./auth.service");
-const createUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = __rest(req.body, []);
-    const result = yield auth_service_1.AuthService.createUser(user);
+const admin_service_1 = require("./admin.service");
+const createAdmin = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const admin = __rest(req.body, []);
+    const result = yield admin_service_1.AdminService.createAdmin(admin);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: 'user created successfully!',
+        message: 'Admin created successfully!',
         data: result,
     });
 }));
-const loginUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const loginAdmin = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const loginData = __rest(req.body, []);
-    const result = yield auth_service_1.AuthService.loginUser(loginData);
+    const result = yield admin_service_1.AdminService.loginAdmin(loginData);
     const { refreshToken } = result, others = __rest(result, ["refreshToken"]);
     // set refresh token into cookie
     const cookieOptions = {
@@ -58,7 +59,10 @@ const loginUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void
 }));
 const refreshToken = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { refreshToken } = req.cookies;
-    const result = yield auth_service_1.AuthService.refreshToken(refreshToken);
+    if (!refreshToken) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'refresh token required');
+    }
+    const result = yield admin_service_1.AdminService.refreshToken(refreshToken);
     // set refresh token into cookie
     const cookieOptions = {
         secure: config_1.default.env === 'production',
@@ -72,8 +76,31 @@ const refreshToken = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, v
         data: result,
     });
 }));
-exports.AuthController = {
-    createUser,
-    loginUser,
+const getAdminProfile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.user; // Perform a type assertion to JwtPayload
+    const result = yield admin_service_1.AdminService.getAdminProfile(id);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'User retrieved successfully !',
+        data: result,
+    });
+}));
+const updateAdminProfile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.user; // Perform a type assertion to JwtPayload
+    const updatedData = req.body;
+    const result = yield admin_service_1.AdminService.updateAdminProfile(id, updatedData);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'User updated successfully !',
+        data: result,
+    });
+}));
+exports.AdminController = {
+    createAdmin,
+    loginAdmin,
     refreshToken,
+    getAdminProfile,
+    updateAdminProfile,
 };
