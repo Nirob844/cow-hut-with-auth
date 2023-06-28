@@ -9,7 +9,6 @@ import { OrderService } from './order.service';
 const createOrder: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const { ...order } = req.body;
-
     const result = await OrderService.createOrder(order);
 
     sendResponse<IOrder>(res, {
@@ -23,6 +22,7 @@ const createOrder: RequestHandler = catchAsync(
 
 const getAllOrders = catchAsync(async (req: Request, res: Response) => {
   const { id: userId, role } = req.user as JwtPayload;
+
   const result = await OrderService.getAllOrders(userId, role);
 
   sendResponse<IOrder[]>(res, {

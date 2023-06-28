@@ -11,6 +11,10 @@ const orderSchema = new Schema<IOrder, OrderModel>(
       type: Schema.Types.ObjectId,
       ref: 'User', // Assuming you have a 'User' model defined
     },
+    seller: {
+      type: Schema.Types.ObjectId,
+      ref: 'User', // Assuming you have a 'User' model defined
+    },
   },
   {
     timestamps: true,

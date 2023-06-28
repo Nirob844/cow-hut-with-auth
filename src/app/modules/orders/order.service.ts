@@ -85,19 +85,52 @@ const getAllOrders = async (
     // Check the role and handle access based on the role
     if (role === 'admin') {
       // Admin can access all orders
-      result = await Order.find().populate('cow').populate('buyer').exec();
+      result = await Order.find()
+        .populate('cow')
+        .populate({
+          path: 'buyer',
+          model: 'User',
+        })
+        .populate({
+          path: 'cow',
+          populate: { path: 'seller', model: 'User' },
+        })
+        .exec();
     } else if (role === 'buyer') {
       // Buyer can access their own orders
       result = await Order.find({ buyer: userId })
         .populate('cow')
-        .populate('buyer')
+        .populate({
+          path: 'buyer',
+          model: 'User',
+        })
+        .populate({
+          path: 'cow',
+          populate: { path: 'seller', model: 'User' },
+        })
         .exec();
     } else if (role === 'seller') {
-      // Seller can access their own orders
-      result = await Order.find({ seller: userId })
+      // Seller can access orders related to their cows
+      const seller = await User.findById(userId);
+
+      if (!seller) {
+        throw new ApiError(httpStatus.NOT_FOUND, 'Seller not found');
+      }
+
+      const sellerCows = await Cow.find({ seller: userId });
+
+      const result = await Order.find({ cow: { $in: sellerCows } })
         .populate('cow')
-        .populate('buyer')
+        .populate({
+          path: 'buyer',
+          model: 'User',
+        })
+        .populate({
+          path: 'cow',
+          populate: { path: 'seller', model: 'User' },
+        })
         .exec();
+      return result;
     } else {
       // Invalid role
       throw new ApiError(httpStatus.UNAUTHORIZED, 'You are not authorized');
@@ -108,6 +141,10 @@ const getAllOrders = async (
       httpStatus.INTERNAL_SERVER_ERROR,
       'Internal Server Error'
     );
+  }
+
+  if (!result) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Order not found');
   }
 
   return result;
